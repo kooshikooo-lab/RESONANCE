@@ -20,7 +20,8 @@ def make_surface(w, h):
 
 
 def glow(radius, color, alpha):
-    """Pre-render a soft radial glow sprite for cheap blitting."""
+    """Pre-render a soft radial glow sprite for cheap blitting.
+    The sprite is premultiplied so draw_glow's BLEND_PREMULTIPLIED is correct."""
     radius = int(radius)
     s = make_surface(radius * 2, radius * 2)
     cx = cy = radius
@@ -28,7 +29,11 @@ def glow(radius, color, alpha):
         color = color[:3]
     for i in range(radius, 0, -1):
         a = int(alpha * (1 - i / radius) ** 2)
-        pygame.draw.circle(s, (*color, a), (cx, cy), i)
+        # premultiply: rgb scaled by alpha so the blend adds soft light
+        r = color[0] * a // 255
+        g = color[1] * a // 255
+        b = color[2] * a // 255
+        pygame.draw.circle(s, (r, g, b, a), (cx, cy), i)
     return s
 
 
