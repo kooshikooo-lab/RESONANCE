@@ -151,6 +151,7 @@ outside the main game. Nothing in the universe exists *only* to serve a plot.
 | **DESIGN_P6** | The Aria - crew culture | Active |
 | **DESIGN_P7** | The Outpost - young world, young crowd | Active |
 | **DESIGN_P8** | Technology - the shapes of astonishment | Active (just de-exotified) |
+| **DESIGN_P9** | The mini-game - Meridian city & the Collegium (singing theme) | NEW |
 
 ## 9. Open questions (for the universe)
 
