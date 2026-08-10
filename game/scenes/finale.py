@@ -1,52 +1,53 @@
 # RESONANCE - finale scene (Movement VI: The Duet)
-# MVP: placeholder that shows the star and routes to the ending. The full
-# two-voice duet mechanic is built after the Dialogue mini-game.
+#
+# The last Dialogue: The Pulse sings its vast unanswered question, and you
+# must answer it. Reuses the Dialogue grammar mechanics with the star's voice,
+# then the story completes and the ending resolves by trust + skill.
 
 import pygame
 
 from .. import config
-from ..app import Scene
-from ..graphics import Background, ParticleField, draw_text, draw_glow
+from ..graphics import draw_text
+from ..audio import star_pulse
+from ..scenes.dialogue import DialogueScene
 
 
-class FinaleScene(Scene):
+class FinaleScene(DialogueScene):
     def __init__(self, app):
         super().__init__(app)
-        self.bg = Background(config.WIDTH, config.HEIGHT)
-        self.particles = ParticleField(config.WIDTH, config.HEIGHT, 60)
-        self.t = 0.0
-        self._played = False
+        self._played_pulse = False
 
     def on_enter(self):
-        self.t = 0.0
-        self._played = False
+        super().on_enter()
+        self._played_pulse = False
         self.app.soundtrack.mood = "dawn"
-        self.app.state.advance_beat()
-
-    def handle(self, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_RETURN, pygame.K_SPACE):
-                self.app.fade_to("ending")
 
     def update(self, dt):
-        self.t += dt
-        self.bg.update()
-        from ..audio import star_pulse
-        if not self._played and self.t > 1.0:
-            self._played = True
-            self.app.audio.play_voice(star_pulse(98.0, 3.0), volume=0.8)
+        super().update(dt)
+        if not self._played_pulse and self.phase == "listen" and self.phase_timer > 0.5:
+            self._played_pulse = True
+            self.app.audio.play_music(star_pulse(98.0, 3.0), volume=0.5)
 
-    def draw(self):
-        self.bg.draw(self.screen, pulse_energy=0.9 + 0.1 * __import__("math").sin(self.t))
-        self.particles.draw(self.screen, dt=0.016)
-        draw_text(self.screen, "THE DUET", 48, config.WIDTH // 2, 140,
+    def handle(self, event):
+        if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE):
+            if self.phase == "result":
+                # the duet is complete - the story ends here
+                self.app.state.advance_beat()
+                self.app.fade_to("ending")
+                self.phase = "done"
+                return
+        super().handle(event)
+
+    def _draw_listen(self, beat, cdata):
+        draw_text(self.screen, "THE DUET", 40, config.WIDTH // 2, 170,
                   config.COLOR_PULSE, align="center")
-        draw_text(self.screen, "(the full duet mechanic arrives with the Dialogue mini-game)",
-                  22, config.WIDTH // 2, 190, config.COLOR_UI_DIM, align="center")
-        px, py = config.WIDTH // 2, config.HEIGHT // 2 - 40
-        draw_glow(self.screen, px, py, config.COLOR_PULSE, 220, 50)
-        draw_glow(self.screen, px, py, (255, 255, 255), 40, 120)
-        pygame.draw.circle(self.screen, (255, 255, 255), (px, py), 22)
-        if int(self.t * 2) % 2 == 0:
-            draw_text(self.screen, "press ENTER", 24, config.WIDTH // 2,
-                      config.HEIGHT - 50, config.COLOR_GOLD, align="center")
+        if self.question_data:
+            self.ribbon.draw_phrase(self.screen, self.question_data["notes"],
+                                    cdata["color"], progress=1.0)
+            draw_text(self.screen, f'"{self.question_data["meaning"]}"', 20,
+                      config.WIDTH // 2, 290, config.COLOR_UI_DIM, align="center")
+        draw_text(self.screen, "the whole choir holds still", 18, config.WIDTH // 2,
+                  330, config.COLOR_UI_DIM, align="center")
+        if self.phase_timer > 1.4:
+            draw_text(self.screen, "press ENTER to answer", 26, config.WIDTH // 2,
+                      config.HEIGHT - 40, config.COLOR_GOLD, align="center")

@@ -245,7 +245,7 @@ MOVEMENTS = [
                 "who": "ilyan",
                 "kind": "dialogue",
                 "phrase": "are you",
-                "response_ok": "i_am",
+                "response_ok": "i am",
                 "line": "Are you... real? Or are you just a very good echo, like the star used to be?",
                 "result_ok": "You answer 'I am' and it falls home. Ilyan's glow steadies. 'Good,' Ilyan says. 'Then you can be my argument.'",
                 "result_bad": "Your answer is wrong - you sing a question back to a question. Ilyan blinks slowly. 'That's not an answer. That's a mirror. We have enough mirrors.'",
