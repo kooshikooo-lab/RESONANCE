@@ -27,6 +27,10 @@ class HubScene(Scene):
                 if beat is None:
                     self.app.fade_to("ending")
                     return
+                mv = self.app.state.current_movement()
+                if mv and mv["id"] == "m6":
+                    self.app.fade_to("finale")
+                    return
                 kind = beat.get("kind")
                 if kind in ("echo", "silence"):
                     self.app.fade_to("echo")

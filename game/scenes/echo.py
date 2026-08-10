@@ -112,10 +112,10 @@ class EchoScene(Scene):
             self._next_round()
 
     def _next_round(self):
-        # record trust changes
+        # record trust changes, then return to the observation deck to choose the next approach
         self.app.state.advance_beat()
         self.round_number += 1
-        self._load_beat()
+        self.app.fade_to("hub")
 
     # ---------------------------------------------------------------- recording / analysis
     def _start_record(self):

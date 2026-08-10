@@ -21,6 +21,7 @@ class FinaleScene(Scene):
         self.t = 0.0
         self._played = False
         self.app.soundtrack.mood = "dawn"
+        self.app.state.advance_beat()
 
     def handle(self, event):
         if event.type == pygame.KEYDOWN:

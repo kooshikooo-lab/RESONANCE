@@ -26,6 +26,7 @@ class DialogueScene(Scene):
         self.phase = "intro"
         self.phase_timer = 0.0
         self.beat = None
+        self.question_data = None
         self.phrase_data = None
         self.alien = None
         self.voice = None
@@ -47,16 +48,19 @@ class DialogueScene(Scene):
         who = beat.get("who", "thrael")
         self.alien = AlienForm(who, 220, 420, 170, 140)
         self.voice = get_voice(story.CHARACTERS[who]["voice"])
-        pdata = story.PHRASES.get(beat.get("phrase", ""))
-        self.phrase_data = pdata
+        # Dialogue: the player must answer with the response phrase, not echo the question
+        question_id = beat.get("phrase", "")
+        response_id = beat.get("response_ok", "")
+        self.question_data = story.PHRASES.get(question_id)
+        self.phrase_data = story.PHRASES.get(response_id)
 
     def handle(self, event):
         if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE):
             if self.phase == "intro":
                 self.phase = "listen"
                 self.phase_timer = 0.0
-                if self.phrase_data:
-                    notes = [(pitch.midi_to_hz(n[0]), n[1], 0.02) for n in self.phrase_data["notes"]]
+                if self.question_data:
+                    notes = [(pitch.midi_to_hz(n[0]), n[1], 0.02) for n in self.question_data["notes"]]
                     self.app.audio.play_voice(self.voice.render_phrase(notes))
             elif self.phase == "listen" and self.phase_timer > 1.2:
                 self.phase = "record"
@@ -65,6 +69,7 @@ class DialogueScene(Scene):
             elif self.phase == "result":
                 self.app.state.advance_beat()
                 self.app.fade_to("hub")
+                self.phase = "done"
 
     def _record(self):
         def worker():
@@ -97,7 +102,7 @@ class DialogueScene(Scene):
         beat = self.beat
         if beat is None:
             return
-        expected = [n[0] for n in self.phrase_data["notes"]] if self.phrase_data else []
+        expected = [n for n in self.phrase_data["notes"]] if self.phrase_data else []
         detected = pitch.contour_to_notes(self.analysis or [])
         res = pitch.score_echo(expected, detected)
         self.result = res
@@ -138,15 +143,19 @@ class DialogueScene(Scene):
         elif self.phase == "listen":
             draw_text(self.screen, "LISTEN", 34, config.WIDTH // 2, 200,
                       config.COLOR_UI, align="center")
-            if self.phrase_data:
-                self.ribbon.draw_phrase(self.screen, self.phrase_data["notes"],
+            if self.question_data:
+                self.ribbon.draw_phrase(self.screen, self.question_data["notes"],
                                         cdata["color"], progress=1.0)
+                draw_text(self.screen, f'"{self.question_data["meaning"]}"', 20,
+                          config.WIDTH // 2, 300, config.COLOR_UI_DIM, align="center")
             if self.phase_timer > 1.2:
                 draw_text(self.screen, "press ENTER to respond", 26, config.WIDTH // 2,
                           config.HEIGHT - 40, config.COLOR_GOLD, align="center")
         elif self.phase == "record":
             draw_text(self.screen, "NOW YOU", 40, config.WIDTH // 2, 190,
                       config.COLOR_PLAYER, align="center")
+            draw_text(self.screen, "answer the question", 22, config.WIDTH // 2, 240,
+                      config.COLOR_UI_DIM, align="center")
             bar_w = config.WIDTH - 300
             bx, by = 150, 330
             pygame.draw.rect(self.screen, (50, 50, 80), (bx, by, bar_w, 26), border_radius=8)
