@@ -246,6 +246,9 @@ class EchoScene(Scene):
                     self._advance()
             if event.key == pygame.K_h:
                 self.show_hint = not self.show_hint
+            if event.key == pygame.K_r and self.state_phase == "listen":
+                self._play_phrase()
+                self.phase_timer = 0.0
 
     # ---------------------------------------------------------------- update
     def update(self, dt):
@@ -377,6 +380,8 @@ class EchoScene(Scene):
                                     cdata["color"], progress=prog)
         draw_text(self.screen, "LISTEN", 34, config.WIDTH // 2, 200,
                   config.COLOR_UI, align="center")
+        draw_text(self.screen, "[R] replay", 16, config.WIDTH - 90,
+                  config.HEIGHT - 62, config.COLOR_UI_DIM, align="right")
         detune = story.CHARACTERS[beat["who"]].get("detune", 0.0)
         if detune and self.phase_timer > dur * 0.5:
             if int(self.phase_timer * 2) % 2 == 0:

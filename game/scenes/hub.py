@@ -19,10 +19,15 @@ class HubScene(Scene):
 
     def on_enter(self):
         self.t = 0.0
+        # show a movement interstitial card when a new movement begins
+        self.movement_card = self.app.state.is_first_beat_of_movement()
 
     def handle(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_RETURN, pygame.K_SPACE):
+                if self.movement_card:
+                    self.movement_card = False
+                    return
                 beat = self.app.state.current_beat()
                 if beat is None:
                     self.app.fade_to("ending")
@@ -51,6 +56,21 @@ class HubScene(Scene):
                       config.HEIGHT // 2, config.COLOR_UI, align="center")
             draw_text(self.screen, "press ENTER to see the ending", 24, config.WIDTH // 2,
                       config.HEIGHT // 2 + 50, config.COLOR_GOLD, align="center")
+            return
+
+        # movement interstitial card on first beat of a movement
+        if self.movement_card:
+            draw_text(self.screen, f"MOVEMENT — {mv['title']}", 44, config.WIDTH // 2,
+                      config.HEIGHT // 2 - 120, config.COLOR_PULSE, align="center")
+            lines = wrap_text(mv["summary"], 26, config.WIDTH - 400)
+            yy = config.HEIGHT // 2 - 40
+            for ln in lines[:5]:
+                draw_text(self.screen, ln, 26, config.WIDTH // 2, yy,
+                          config.COLOR_UI, align="center")
+                yy += 38
+            if int(self.t * 2) % 2 == 0:
+                draw_text(self.screen, "press ENTER to begin", 26, config.WIDTH // 2,
+                          config.HEIGHT - 70, config.COLOR_GOLD, align="center")
             return
 
         draw_text(self.screen, config.GAME_TITLE, 22, 20, 14, config.COLOR_UI_DIM)

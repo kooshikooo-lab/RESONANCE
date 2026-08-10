@@ -103,6 +103,9 @@ class DialogueScene(Scene):
                 self.app.state.advance_beat()
                 self.app.fade_to("hub")
                 self.phase = "done"
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_r and self.phase == "listen":
+            self._play_form()
+            self.phase_timer = 0.0
 
     def _play_form(self):
         if not self.question_data:
@@ -217,6 +220,8 @@ class DialogueScene(Scene):
     def _draw_listen(self, beat, cdata):
         draw_text(self.screen, "LISTEN", 34, config.WIDTH // 2, 200,
                   config.COLOR_UI, align="center")
+        draw_text(self.screen, "[R] replay", 16, config.WIDTH - 90,
+                  config.HEIGHT - 62, config.COLOR_UI_DIM, align="right")
         if self.question_data:
             self.ribbon.draw_phrase(self.screen, self.question_data["notes"],
                                     cdata["color"], progress=1.0)
