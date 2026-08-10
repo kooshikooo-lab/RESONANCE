@@ -54,13 +54,15 @@ class App:
         self.next_scene_id = None
         self.transition_t = 0.0
         self.transitioning = False
+        self._music_timer = 0.0
+        self._music_loop = 0.0
 
     # ---- scene management
     def set_scene(self, scene_id):
         self.next_scene_id = scene_id
 
     def _build_scene(self, scene_id):
-        from .scenes import TITLE, HUB, ECHO, DIALOGUE, FINALE, ENDING
+        from .scenes import TITLE, HUB, ECHO, DIALOGUE, FINALE, ENDING, GARDEN
         if scene_id == TITLE:
             from .scenes import TitleScene
             return TitleScene(self)
@@ -79,6 +81,9 @@ class App:
         if scene_id == ENDING:
             from .scenes import EndingScene
             return EndingScene(self)
+        if scene_id == GARDEN:
+            from .scenes import GardenScene
+            return GardenScene(self)
         return TitleScene(self)
 
     def start(self):
@@ -107,6 +112,14 @@ class App:
                     self.scene = self._build_scene(self.next_scene_id)
                     self.next_scene_id = None
                     self.scene.on_enter()
+
+            # keep the ambient soundtrack looping, re-mooding on mood change
+            self._music_timer += dt
+            self._music_loop -= dt
+            if self._music_timer >= 0.5 and self._music_loop <= 0.0:
+                self._music_timer = 0.0
+                self._music_loop = 10.0
+                self.audio.play_music(self.soundtrack.render(10.0))
 
             if self.scene and not self.transitioning:
                 self.scene.update(dt)

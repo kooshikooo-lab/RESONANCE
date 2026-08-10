@@ -15,6 +15,7 @@ class GameState:
         self.total_attempts = 0
         self.avg_fidelity = 0.0
         self.seen_intros = set()
+        self.voss_signs = 0            # times Voss is moved by what you sing (0..3)
 
     # ---- trust helpers
     def add_trust(self, who, amount):

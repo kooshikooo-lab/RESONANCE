@@ -9,6 +9,7 @@
 #   * grief is a slow descending minor
 # All tuning uses just intonation ratios off a root so it sounds "alien-perfect".
 
+from . import config
 from .pitch import midi_to_hz
 
 A4 = 440.0
@@ -147,6 +148,7 @@ CHARACTERS = {
         "name": "Seravak",
         "role": "Teacher - a connoisseur of imperfection",
         "color": config.COLOR_ALIEN_A,
+        "morph": "seravak",
         "voice": "seravak",
         "detune": 0.0,
         "bass_hum": True,
@@ -161,6 +163,7 @@ CHARACTERS = {
         "name": "Ilyan",
         "role": "The Young - a revolutionary who refuses to grow in tune",
         "color": config.COLOR_ALIEN_B,
+        "morph": "ilyan",
         "voice": "ilyan",
         "detune": 6.0,
         "bass_hum": False,
@@ -175,6 +178,7 @@ CHARACTERS = {
         "name": "Thrael",
         "role": "The Negotiator - the despairing faithful",
         "color": config.COLOR_ALIEN_C,
+        "morph": "thrael",
         "voice": "thrael",
         "detune": -14.0,     # THE PERFECT LIE: always sung slightly flat
         "bass_hum": False,
@@ -189,6 +193,7 @@ CHARACTERS = {
         "name": "The Pulse",
         "role": "The Star - a symbiote, lonely as a mountain",
         "color": config.COLOR_ALIEN_D,
+        "morph": "pulse",
         "voice": "pulse",
         "detune": 0.0,
         "bass_hum": False,
@@ -197,6 +202,22 @@ CHARACTERS = {
             "There is no face, only the deep blue breathing of the sky itself. The "
             "Pulse does not speak in words - it speaks in a phrase that has been "
             "waiting, unanswered, for a thousand years."
+        ),
+    },
+    # Voss is the human anchor - tracked but not a singing NPC (no voice).
+    # The crew does not have trust; they have VOSS_SIGNS tracking (see DESIGN_P3 4.9).
+    "voss": {
+        "name": "Commander Voss",
+        "role": "Captain of the Aria - the human who must learn to hear again",
+        "color": (150, 160, 180),
+        "voice": "voss",
+        "detune": 0.0,
+        "bass_hum": False,
+        "trust": 0.0,
+        "intro": (
+            "Voss was a musician once. A war and a loss took his voice, and he built his "
+            "life on measurement, not feeling - a defense. He watches you sing with the "
+            "look of a man watching something he has forgotten how to do."
         ),
     },
 }
@@ -244,7 +265,7 @@ MOVEMENTS = [
                 "who": "ilyan",
                 "kind": "dialogue",
                 "phrase": "are you",
-                "response_ok": "i_am",
+                "response_ok": "i am",
                 "line": "Are you... real? Or are you just a very good echo, like the star used to be?",
                 "result_ok": "You answer 'I am' and it falls home. Ilyan's glow steadies. 'Good,' Ilyan says. 'Then you can be my argument.'",
                 "result_bad": "Your answer is wrong - you sing a question back to a question. Ilyan blinks slowly. 'That's not an answer. That's a mirror. We have enough mirrors.'",

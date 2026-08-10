@@ -210,6 +210,108 @@ def score_echo(expected, detected):
     return res
 
 
+# ---------------------------------------------------------------- dialogue: phrase matching
+
+def match_phrase(detected, candidates):
+    """Find which learned phrase the player sang, by pitch-contour similarity.
+
+    detected: list of note segments from the player's voice
+    candidates: dict of phrase_id -> PHRASES entry (with "notes": [(midi, dur), ...])
+    Returns (best_phrase_id or None, best_fidelity, per_id_scores).
+    """
+    best_id = None
+    best_fid = 0.0
+    per_id = {}
+    n_sung = len(detected)
+    for pid, pdata in candidates.items():
+        fid = 0.0
+        notes = pdata.get("notes")
+        if notes and detected:
+            fid = score_echo(notes, detected).fidelity
+            # phrase identity: singing a 6-note phrase should not be scored as a
+            # perfect 4-note prefix match - penalize length mismatch
+            n_exp = len(notes)
+            if n_sung and n_exp:
+                len_sim = min(n_sung, n_exp) / max(n_sung, n_exp)
+                fid *= 0.5 + 0.5 * len_sim
+        per_id[pid] = fid
+        if fid > best_fid:
+            best_fid = fid
+            best_id = pid
+    return best_id, best_fid, per_id
+
+
+class DialogueResult:
+    def __init__(self):
+        self.chosen_id = None           # the learned phrase the player sang (best match)
+        self.expected_id = None         # the canonical correct response
+        self.fidelity = 0.0             # how well they sang the chosen phrase
+        self.grammar_fit = 0.0          # 0..1 - does the chosen form answer the Form
+        self.overall = 0.0              # combined score 0..1
+        self.mirror = False             # they echoed the question back instead of answering
+        self.summary = ""               # "understood" | "misread" | "lost"
+
+
+def grammar_fit(question_form, response_form):
+    """Havari grammar: judge whether a response's Form answers the NPC's Form.
+    1.0 = correct response; ~0 = you sang the question back (a mirror)."""
+    if response_form == "refusal":
+        # a refusal answers a challenge/refusal, but never a plain question well
+        return 0.6 if question_form in ("refusal", "challenge") else 0.3
+    if question_form == "question":
+        # a question must be answered, not re-echoed
+        if response_form == "statement":
+            return 1.0
+        if response_form == "request":
+            return 0.7
+        return 0.2  # mirror - a question echoed back
+    if question_form == "request":
+        if response_form == "statement":
+            return 1.0
+        return 0.4
+    if question_form in ("refusal", "challenge"):
+        if response_form == "statement":
+            return 0.8
+        return 0.4
+    # statement -> statement (agreeing, completing) or anything gentle
+    return 0.9 if response_form == "statement" else 0.5
+
+
+def score_dialogue(question_form, response_form, chosen_id, expected_id, fidelity,
+                   question_id=None):
+    """Grade a Dialogue attempt. Returns a DialogueResult.
+
+    fidelity is how accurately the player sang whichever phrase they chose.
+    The grammar relationship between the NPC's Form and the player's chosen
+    phrase is the heart of the mechanic: answering beats echoing.
+    """
+    res = DialogueResult()
+    res.chosen_id = chosen_id
+    res.expected_id = expected_id
+    res.fidelity = fidelity
+    res.grammar_fit = grammar_fit(question_form, response_form)
+    # a mirror = you echoed their exact phrase back (a question re-echoed, or
+    # the accusation re-sung). The Havari forgive bad echo; they do not forgive
+    # being thrown back at themselves.
+    res.mirror = (chosen_id is not None and chosen_id == question_id)
+    # overall: singing the RIGHT KIND of answer matters most; accuracy second
+    res.overall = res.grammar_fit * (0.6 + 0.4 * fidelity)
+    # if you didn't sing a recognizable phrase at all, it's lost, not misread
+    if chosen_id is None or fidelity < 0.4:
+        res.overall = min(res.overall, 0.2)
+    if res.mirror:
+        # echoing their Form is a specific social error, always worse
+        res.overall = min(res.overall, 0.15)
+        res.summary = "lost"
+    elif res.overall >= 0.7:
+        res.summary = "understood"
+    elif res.overall >= 0.35:
+        res.summary = "misread"
+    else:
+        res.summary = "lost"
+    return res
+
+
 # ---------------------------------------------------------------- lie detection
 
 def measure_npc_fidelity(phrase_midis, detune_cents):
