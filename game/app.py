@@ -62,7 +62,7 @@ class App:
         self.next_scene_id = scene_id
 
     def _build_scene(self, scene_id):
-        from .scenes import TITLE, HUB, ECHO, DIALOGUE, FINALE, ENDING
+        from .scenes import TITLE, HUB, ECHO, DIALOGUE, FINALE, ENDING, GARDEN
         if scene_id == TITLE:
             from .scenes import TitleScene
             return TitleScene(self)
@@ -81,6 +81,9 @@ class App:
         if scene_id == ENDING:
             from .scenes import EndingScene
             return EndingScene(self)
+        if scene_id == GARDEN:
+            from .scenes import GardenScene
+            return GardenScene(self)
         return TitleScene(self)
 
     def start(self):

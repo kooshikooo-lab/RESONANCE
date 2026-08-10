@@ -25,6 +25,8 @@ class TitleScene(Scene):
         if event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_RETURN, pygame.K_SPACE):
                 self.app.fade_to("hub")
+            if event.key == pygame.K_g:
+                self.app.fade_to("garden")
             if event.key == pygame.K_ESCAPE:
                 self.app.running = False
 
@@ -62,6 +64,10 @@ class TitleScene(Scene):
             draw_text(self.screen, "press ENTER to begin", 30, config.WIDTH // 2,
                       config.HEIGHT - 80, config.COLOR_GOLD, align="center")
 
+        draw_text(self.screen, "press G to visit the outpost",
+                  20, config.WIDTH // 2, config.HEIGHT - 50, config.COLOR_UI_DIM,
+                  align="center")
+
         draw_text(self.screen, "a voice is the most vulnerable thing you can offer",
-                  18, config.WIDTH // 2, config.HEIGHT - 40, config.COLOR_UI_DIM,
+                  18, config.WIDTH // 2, config.HEIGHT - 28, config.COLOR_UI_DIM,
                   align="center")
