@@ -54,6 +54,8 @@ class App:
         self.next_scene_id = None
         self.transition_t = 0.0
         self.transitioning = False
+        self._music_timer = 0.0
+        self._music_loop = 0.0
 
     # ---- scene management
     def set_scene(self, scene_id):
@@ -107,6 +109,14 @@ class App:
                     self.scene = self._build_scene(self.next_scene_id)
                     self.next_scene_id = None
                     self.scene.on_enter()
+
+            # keep the ambient soundtrack looping, re-mooding on mood change
+            self._music_timer += dt
+            self._music_loop -= dt
+            if self._music_timer >= 0.5 and self._music_loop <= 0.0:
+                self._music_timer = 0.0
+                self._music_loop = 10.0
+                self.audio.play_music(self.soundtrack.render(10.0))
 
             if self.scene and not self.transitioning:
                 self.scene.update(dt)
