@@ -53,8 +53,14 @@ def complete_dialogue(sc):
 
 
 def complete_finale(sc):
-    # the finale advances the beat in on_enter; nothing more to do here
-    pass
+    # the finale is a Dialogue subclass: grade the duet, then the beat advances
+    sc._thread = None
+    sc.audio_capture = None
+    sc.analysis = []
+    sc._compute_result()
+    sc.phase = "result"
+    sc.draw()
+    sc.app.state.advance_beat()
 
 
 def main():
