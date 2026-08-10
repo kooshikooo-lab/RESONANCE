@@ -134,10 +134,11 @@ class DialogueScene(Scene):
         if self.alien:
             self.alien.update(dt, intensity=0.8)
         self.phase_timer += dt
-        if self.phase == "analyze" and self._thread is not None and not self._thread.is_alive():
-            self._thread = None
-            self._compute_result()
-            self.phase = "result"
+        if self.phase == "analyze":
+            if self._thread is None or not self._thread.is_alive():
+                self._thread = None
+                self._compute_result()
+                self.phase = "result"
 
     def _compute_result(self):
         beat = self.beat

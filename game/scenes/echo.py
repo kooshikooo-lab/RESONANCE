@@ -261,7 +261,8 @@ class EchoScene(Scene):
 
         if self.state_phase == "analyze" and self.analysis is not None:
             # analysis done (RMVPE returned) - only when thread fully finished
-            if self._thread is None:
+            if self._thread is None or not self._thread.is_alive():
+                self._thread = None
                 self._compute_result()
                 self.state_phase = "result"
                 self.phase_timer = 0.0

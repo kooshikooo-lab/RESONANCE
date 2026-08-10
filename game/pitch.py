@@ -296,6 +296,9 @@ def score_dialogue(question_form, response_form, chosen_id, expected_id, fidelit
     res.mirror = (chosen_id is not None and chosen_id == question_id)
     # overall: singing the RIGHT KIND of answer matters most; accuracy second
     res.overall = res.grammar_fit * (0.6 + 0.4 * fidelity)
+    # if you didn't sing a recognizable phrase at all, it's lost, not misread
+    if chosen_id is None or fidelity < 0.4:
+        res.overall = min(res.overall, 0.2)
     if res.mirror:
         # echoing their Form is a specific social error, always worse
         res.overall = min(res.overall, 0.15)
