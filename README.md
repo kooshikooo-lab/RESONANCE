@@ -49,8 +49,17 @@ small, patient, everyday; no evil, only mismatched needs). See `DESIGN*.md`.
 
 ## Status
 
-Design bible complete. Engine foundation complete. **In progress: Mini-game 1 (The Echo)
-as a complete playable MVP.**
+Design bible complete. Engine complete. **Both mini-games are playable end-to-end** across
+all six movements: The Echo (fidelity -> trust), The Dialogue (grammar-graded responses,
+mirror-echoing is a social error), the Movement VI duet, and three endings resolved by
+trust + skill. Lie-detection reveal and Commander Voss's arc are wired in.
+
+## Controls
+
+- `ENTER` / `SPACE` — advance (approach, listen, answer, continue)
+- `R` — replay the phrase or Form during LISTEN
+- `H` — toggle the phrase note-name hint
+- `ESC` — quit
 
 ## Tech
 
