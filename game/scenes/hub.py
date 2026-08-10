@@ -6,7 +6,7 @@ import pygame
 
 from .. import config
 from ..app import Scene
-from ..graphics import Background, ParticleField, draw_text, draw_glow
+from ..graphics import Background, ParticleField, draw_text, wrap_text, draw_glow
 from .. import story
 
 
@@ -81,8 +81,26 @@ class HubScene(Scene):
         draw_text(self.screen, "TRUST", 18, 30, 90, config.COLOR_UI_DIM)
         y = 120
         for cid, cdata in story.CHARACTERS.items():
+            if cid == "voss":
+                continue
             pygame.draw.rect(self.screen, (60, 60, 80), (30, y, 120, 10))
             v = self.app.state.trust_of(cid)
             pygame.draw.rect(self.screen, cdata["color"], (30, y, int(120 * v / 100), 10))
             draw_text(self.screen, cdata["name"], 16, 160, y - 6, config.COLOR_UI_DIM)
             y += 26
+
+        # Voss's observation - the human foil watching you (DESIGN_P3 4.9)
+        voss = story.CHARACTERS["voss"]
+        draw_text(self.screen, "VOSS", 18, config.WIDTH - 240, 90, voss["color"])
+        signs = self.app.state.voss_signs
+        voss_line = {
+            0: "Voss watches your singing with the stillness of a man trying to remember a melody.",
+            1: "Voss clears his throat. 'That wasn't bad. Don't let it go to your head.'",
+            2: "Voss hums under his breath - then stops, startled by his own voice.",
+            3: "Voss is quiet. When he speaks: 'I used to be able to do that.'",
+        }.get(min(signs, 3), "")
+        for i, ln in enumerate(wrap_text(voss_line, 18, 220)):
+            draw_text(self.screen, ln, 18, config.WIDTH - 240, 120 + i * 24,
+                      config.COLOR_UI_DIM)
+        draw_text(self.screen, f"signs moved: {signs}/3", 15, config.WIDTH - 240,
+                  220, config.COLOR_UI_DIM)

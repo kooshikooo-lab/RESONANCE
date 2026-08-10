@@ -160,6 +160,8 @@ class DialogueScene(Scene):
         if res.summary == "understood":
             gain = 16
             self.app.audio.play_sfx(ui_accept())
+            if self.app.state.voss_signs < 3:
+                self.app.state.voss_signs += 1
         elif res.summary == "misread":
             gain = 2
             self.app.audio.play_sfx(ui_decline())

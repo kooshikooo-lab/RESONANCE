@@ -46,6 +46,7 @@ class EchoScene(Scene):
         self.show_hint = False
         self.hint_timer = 0.0
         self.round_number = 0
+        self.lie_read = None
 
     # ---------------------------------------------------------------- lifecycle
     def on_enter(self):
@@ -65,6 +66,7 @@ class EchoScene(Scene):
         self.record_level = 0.0
         self.record_progress = 0.0
         self.show_hint = False
+        self.lie_read = None
 
         # build the alien form for this beat's speaker
         who = beat.get("who", "seravak")
@@ -177,6 +179,37 @@ class EchoScene(Scene):
             return
         res = pitch.score_echo(expected, detected)
         self.result = res
+
+        # lie-detection: if the speaker sings with a systemic detune (Thrael's
+        # perfect lie, Ilyan's sharpness), measure whether the player echoed the
+        # detune (awareness) or corrected it (honesty). Both are charged.
+        who = self.beat.get("who", "")
+        cdata = story.CHARACTERS.get(who, {})
+        detune = cdata.get("detune", 0.0)
+        self.lie_read = None
+        if detune and expected and detected:
+            # signed deviation: target midi -> sung midi, in cents (flat = negative)
+            # time-ordered greedy alignment, matching the scoring pass
+            signed = []
+            sung_idx = 0
+            for tm, _dur in expected:
+                best = None
+                best_d = None
+                for s_idx in range(sung_idx, len(detected)):
+                    d = pitch.cents(pitch.midi_to_hz(tm), pitch.midi_to_hz(detected[s_idx][0]))
+                    if best_d is None or abs(d) < abs(best_d):
+                        best_d = d
+                        best = s_idx
+                if best is not None and abs(best_d) < 200:
+                    signed.append(best_d)
+                    sung_idx = best + 1
+            if signed:
+                mean_off = sum(signed) / len(signed)
+                if abs(mean_off - detune) < abs(detune) * 0.5:
+                    self.lie_read = ("caught", mean_off)
+                elif abs(mean_off) < abs(detune) * 0.5:
+                    self.lie_read = ("honest", mean_off)
+
         # trust change by fidelity
         fid = res.fidelity
         self.app.state.record_attempt(fid)
@@ -185,6 +218,8 @@ class EchoScene(Scene):
         if fid >= 0.85:
             gain = 22
             self.app.audio.play_sfx(ui_accept())
+            if self.app.state.voss_signs < 3:
+                self.app.state.voss_signs += 1
         elif fid >= 0.6:
             gain = 12
             self.app.audio.play_sfx(ui_accept())
@@ -341,6 +376,11 @@ class EchoScene(Scene):
                                     cdata["color"], progress=prog)
         draw_text(self.screen, "LISTEN", 34, config.WIDTH // 2, 200,
                   config.COLOR_UI, align="center")
+        detune = story.CHARACTERS[beat["who"]].get("detune", 0.0)
+        if detune and self.phase_timer > dur * 0.5:
+            if int(self.phase_timer * 2) % 2 == 0:
+                draw_text(self.screen, "something in their voice is... slightly off.",
+                          18, config.WIDTH // 2, 250, config.COLOR_UI_DIM, align="center")
         if self.phase_timer > dur + 0.4:
             draw_text(self.screen, "press ENTER to sing", 26, config.WIDTH // 2,
                       config.HEIGHT - 40, config.COLOR_GOLD, align="center")
@@ -417,6 +457,16 @@ class EchoScene(Scene):
         draw_text(self.screen, headline, 44, config.WIDTH // 2, 150, hcol, align="center")
         draw_text(self.screen, f"fidelity {res.fidelity*100:.0f}%  ·  {res.perfect}/{res.total} perfect",
                   22, config.WIDTH // 2, 200, config.COLOR_UI, align="center")
+        # the lie-detection reading - the heart of the game (DESIGN_P4)
+        if self.lie_read:
+            kind, off = self.lie_read
+            if kind == "caught":
+                lcol = config.COLOR_BAD
+                lt = f"you echoed the flaw - {off:+.0f} cents, exactly like theirs. You CAUGHT the lie."
+            else:
+                lcol = config.COLOR_GOOD
+                lt = f"you sang it true ({off:+.0f} cents off). You showed them what honesty sounds like."
+            draw_text(self.screen, lt, 19, config.WIDTH // 2, 232, lcol, align="center")
         # draw both ribbons: expected (dim) + detected (bright, if any)
         if self.phrase_data:
             self.ribbon.draw_phrase(self.screen, self.phrase_data["notes"],

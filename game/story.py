@@ -200,6 +200,22 @@ CHARACTERS = {
             "waiting, unanswered, for a thousand years."
         ),
     },
+    # Voss is the human anchor - tracked but not a singing NPC (no voice).
+    # The crew does not have trust; they have VOSS_SIGNS tracking (see DESIGN_P3 4.9).
+    "voss": {
+        "name": "Commander Voss",
+        "role": "Captain of the Aria - the human who must learn to hear again",
+        "color": (150, 160, 180),
+        "voice": "voss",
+        "detune": 0.0,
+        "bass_hum": False,
+        "trust": 0.0,
+        "intro": (
+            "Voss was a musician once. A war and a loss took his voice, and he built his "
+            "life on measurement, not feeling - a defense. He watches you sing with the "
+            "look of a man watching something he has forgotten how to do."
+        ),
+    },
 }
 
 # ---------------------------------------------------------------- movements
