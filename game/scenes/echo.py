@@ -72,6 +72,12 @@ class EchoScene(Scene):
         self.alien = AlienForm(who, 220, 420, 170, 140)
         self.voice = get_voice(cdata["voice"])
 
+        # on first meeting, show the character's introduction card first
+        self.intro_card = False
+        if who not in self.app.state.seen_intros:
+            self.app.state.seen_intros.add(who)
+            self.intro_card = True
+
         # phrase setup
         phrase_id = beat.get("phrase")
         if phrase_id:
@@ -95,6 +101,10 @@ class EchoScene(Scene):
     # ---------------------------------------------------------------- phases
     def _advance(self):
         if self.state_phase == "intro":
+            if self.intro_card:
+                self.intro_card = False
+                self.phase_timer = 0.0
+                return
             self.state_phase = "listen"
             self.phase_timer = 0.0
             self._play_phrase()
@@ -271,6 +281,9 @@ class EchoScene(Scene):
             return
         who = beat["who"]
         cdata = story.CHARACTERS[who]
+        if self.intro_card:
+            self._draw_character_intro(cdata)
+            return
         # dialogue box at bottom
         box = pygame.Rect(80, 500, config.WIDTH - 160, 160)
         pygame.draw.rect(self.screen, (18, 16, 40), box, border_radius=12)
@@ -293,6 +306,27 @@ class EchoScene(Scene):
         if int(self.hint_timer * 2) % 2 == 0:
             draw_text(self.screen, "[H] hint", 16, box.x + 20, box.y + box.h - 26,
                       config.COLOR_UI_DIM)
+
+    def _draw_character_intro(self, cdata):
+        # full-screen character introduction card on first meeting
+        overlay = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
+        overlay.fill((8, 6, 20, 235))
+        self.screen.blit(overlay, (0, 0))
+        draw_glow(self.screen, config.WIDTH // 2, 210, cdata["color"], 160, 40)
+        pygame.draw.circle(self.screen, cdata["color"],
+                           (config.WIDTH // 2, 210), 60)
+        draw_text(self.screen, cdata["name"], 52, config.WIDTH // 2, 300,
+                  cdata["color"], align="center")
+        draw_text(self.screen, cdata["role"], 24, config.WIDTH // 2, 350,
+                  config.COLOR_UI_DIM, align="center")
+        intro_lines = wrap_text(cdata["intro"], 24, config.WIDTH - 300)
+        yy = 410
+        for ln in intro_lines[:6]:
+            draw_text(self.screen, ln, 24, config.WIDTH // 2, yy,
+                      config.COLOR_UI, align="center")
+            yy += 32
+        draw_text(self.screen, "press ENTER to approach", 24, config.WIDTH // 2,
+                  config.HEIGHT - 50, config.COLOR_GOLD, align="center")
 
     def _draw_listen(self):
         beat = self.beat

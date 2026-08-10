@@ -24,7 +24,7 @@ class TitleScene(Scene):
     def handle(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_RETURN, pygame.K_SPACE):
-                self.app.fade_to("echo")
+                self.app.fade_to("hub")
             if event.key == pygame.K_ESCAPE:
                 self.app.running = False
 

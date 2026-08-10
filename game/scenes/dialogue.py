@@ -10,7 +10,9 @@ import threading
 from .. import config
 from ..app import Scene
 from ..audio import get_voice, ui_accept, ui_decline
-from ..graphics import Background, AlienForm, Ribbon, ParticleField, draw_text, wrap_text
+from ..graphics import (
+    Background, AlienForm, Ribbon, ParticleField, draw_text, wrap_text, draw_glow,
+)
 from .. import pitch
 from .. import story
 
@@ -48,6 +50,10 @@ class DialogueScene(Scene):
         who = beat.get("who", "thrael")
         self.alien = AlienForm(who, 220, 420, 170, 140)
         self.voice = get_voice(story.CHARACTERS[who]["voice"])
+        self.intro_card = False
+        if who not in self.app.state.seen_intros:
+            self.app.state.seen_intros.add(who)
+            self.intro_card = True
         # Dialogue: the player must answer with the response phrase, not echo the question
         question_id = beat.get("phrase", "")
         response_id = beat.get("response_ok", "")
@@ -57,6 +63,10 @@ class DialogueScene(Scene):
     def handle(self, event):
         if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE):
             if self.phase == "intro":
+                if self.intro_card:
+                    self.intro_card = False
+                    self.phase_timer = 0.0
+                    return
                 self.phase = "listen"
                 self.phase_timer = 0.0
                 if self.question_data:
@@ -129,6 +139,9 @@ class DialogueScene(Scene):
         cdata = story.CHARACTERS[beat["who"]]
 
         if self.phase == "intro":
+            if self.intro_card:
+                self._draw_character_intro(cdata)
+                return
             box = pygame.Rect(80, 500, config.WIDTH - 160, 160)
             pygame.draw.rect(self.screen, (18, 16, 40), box, border_radius=12)
             pygame.draw.rect(self.screen, cdata["color"], box, 2, border_radius=12)
@@ -186,3 +199,23 @@ class DialogueScene(Scene):
                     yy += 30
                 draw_text(self.screen, "press ENTER to continue", 24, config.WIDTH // 2,
                           config.HEIGHT - 34, config.COLOR_GOLD, align="center")
+
+    def _draw_character_intro(self, cdata):
+        overlay = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
+        overlay.fill((8, 6, 20, 235))
+        self.screen.blit(overlay, (0, 0))
+        draw_glow(self.screen, config.WIDTH // 2, 210, cdata["color"], 160, 40)
+        pygame.draw.circle(self.screen, cdata["color"],
+                           (config.WIDTH // 2, 210), 60)
+        draw_text(self.screen, cdata["name"], 52, config.WIDTH // 2, 300,
+                  cdata["color"], align="center")
+        draw_text(self.screen, cdata["role"], 24, config.WIDTH // 2, 350,
+                  config.COLOR_UI_DIM, align="center")
+        intro_lines = wrap_text(cdata["intro"], 24, config.WIDTH - 300)
+        yy = 410
+        for ln in intro_lines[:6]:
+            draw_text(self.screen, ln, 24, config.WIDTH // 2, yy,
+                      config.COLOR_UI, align="center")
+            yy += 32
+        draw_text(self.screen, "press ENTER to approach", 24, config.WIDTH // 2,
+                  config.HEIGHT - 50, config.COLOR_GOLD, align="center")
