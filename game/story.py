@@ -9,6 +9,7 @@
 #   * grief is a slow descending minor
 # All tuning uses just intonation ratios off a root so it sounds "alien-perfect".
 
+from . import config
 from .pitch import midi_to_hz
 
 A4 = 440.0

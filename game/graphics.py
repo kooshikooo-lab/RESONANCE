@@ -11,15 +11,21 @@ from . import config
 
 # ---------------------------------------------------------------- helpers
 
+glow_cache = {}
+
+
 def make_surface(w, h):
     surf = pygame.Surface((w, h), pygame.SRCALPHA)
     return surf
 
 
-def glow(circle_surface, radius, color, alpha):
+def glow(radius, color, alpha):
     """Pre-render a soft radial glow sprite for cheap blitting."""
+    radius = int(radius)
     s = make_surface(radius * 2, radius * 2)
     cx = cy = radius
+    if len(color) == 4:
+        color = color[:3]
     for i in range(radius, 0, -1):
         a = int(alpha * (1 - i / radius) ** 2)
         pygame.draw.circle(s, (*color, a), (cx, cy), i)
@@ -32,9 +38,6 @@ def draw_glow(screen, x, y, color, radius, alpha):
         g = glow(radius, color, alpha)
         glow_cache[(radius, color, alpha)] = g
     screen.blit(g, (x - radius, y - radius), special_flags=pygame.BLEND_PREMULTIPLIED)
-
-
-glow_cache = {}
 
 
 # ---------------------------------------------------------------- background
@@ -53,6 +56,9 @@ class Background:
         ]
         self.nebula = self._make_nebula()
         self.t = 0.0
+
+    def update(self):
+        pass
 
     def _make_nebula(self):
         surf = make_surface(self.w, self.h)
@@ -142,11 +148,11 @@ class AlienForm:
         draw_glow(screen, x, y + base // 2, c, self.w * 2, 18)
 
 
+from .story import CHARACTERS
+
+
 def story_color(cid):
-    return story.CHARACTERS[cid]["color"]
-
-
-from .story import CHARACTERS as story
+    return CHARACTERS[cid]["color"]
 
 
 # ---------------------------------------------------------------- ribbon (waveform UI)
