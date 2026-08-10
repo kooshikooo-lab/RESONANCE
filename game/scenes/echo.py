@@ -344,6 +344,8 @@ class EchoScene(Scene):
         if self.phase_timer > dur + 0.4:
             draw_text(self.screen, "press ENTER to sing", 26, config.WIDTH // 2,
                       config.HEIGHT - 40, config.COLOR_GOLD, align="center")
+        if self.show_hint and self.phrase_data:
+            self._draw_hint()
 
     def _play_phrase(self):
         if not self.phrase_data:
@@ -351,6 +353,14 @@ class EchoScene(Scene):
         notes = [(pitch.midi_to_hz(n[0]), n[1], 0.02) for n in self.phrase_data["notes"]]
         wav = self.voice.render_phrase(notes)
         self.app.audio.play_voice(wav, volume=0.9)
+
+    def _draw_hint(self):
+        # diegetic hint: the note names of the phrase, shown when [H] is toggled
+        names = [config.hz_to_note_name(pitch.midi_to_hz(n[0])) for n in self.phrase_data["notes"]]
+        draw_text(self.screen, " ".join(names), 26, config.WIDTH // 2,
+                  config.HEIGHT - 90, config.COLOR_UI, align="center")
+        draw_text(self.screen, "[H] hide", 16, config.WIDTH // 2,
+                  config.HEIGHT - 62, config.COLOR_UI_DIM, align="center")
 
     def _draw_record(self):
         # recording UI: big level bar + progress
@@ -377,6 +387,8 @@ class EchoScene(Scene):
         if self.phrase_data:
             self.ribbon.draw_phrase(self.screen, self.phrase_data["notes"],
                                     (*config.COLOR_UI_DIM, 120), progress=1.0)
+        if self.show_hint and self.phrase_data:
+            self._draw_hint()
 
     def _draw_analyze(self):
         draw_text(self.screen, "the echo is heard...", 34, config.WIDTH // 2,

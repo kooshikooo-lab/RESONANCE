@@ -17,9 +17,10 @@ class EndingScene(Scene):
 
     def on_enter(self):
         self.t = 0.0
-        # pick ending by trust
+        # pick ending by trust + how well you sang the responses
         trust_sum = sum(self.app.state.trust.values())
-        if trust_sum >= 120:
+        skill = self.app.state.avg_fidelity
+        if trust_sum >= 120 and skill >= 0.5:
             ending_id = "chorus"
         elif trust_sum >= 60:
             ending_id = "voyage"
